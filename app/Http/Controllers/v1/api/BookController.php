@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers\v1\api;
+
 use App\Http\Controllers\v1\api\BaseController as ApiBaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
 use Dotenv\Parser\Value;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class BookController extends ApiBaseController
@@ -40,22 +42,19 @@ class BookController extends ApiBaseController
      */
     public function store(Request $request)
     {
-        $validate = Validator::make($request->all(), [
+
+        $this->validate($request, [
             'title' => 'required',
             'author' => 'required',
             'description' => 'required',
             'released' => 'required',
-            'image' => 'image'
+            'image' => 'required|image'
         ]);
-        //return $this->sendResponse($request, 'New Book has Been Added');
-        // if($validate->fails()){
-        //     return $this->sendError('Validation error', $validate->errors(), 400);
-        // }    
 
-        if($request->hasFile('image'))
-        {
+        if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $image->storeAs('/img', $image->hashName());
+            $image->getClientOriginalName();
+            $image->storeAs('img', $image->hashName());
             $book = Book::create([
                 'title' => $request->title,
                 'author' => $request->author,
@@ -63,7 +62,7 @@ class BookController extends ApiBaseController
                 'released' => $request->released,
                 'image' => "img/" . $image->hashName()
             ]);
-        }else{
+        } else {
             $book = Book::create([
                 'title' => $request->title,
                 'author' => $request->author,
@@ -71,6 +70,7 @@ class BookController extends ApiBaseController
                 'released' => $request->released,
             ]);
         }
+        Log::info($book);
         return $this->sendResponse(new BookResource($book), 'New Book has Been Added');
     }
 
@@ -83,7 +83,7 @@ class BookController extends ApiBaseController
     public function show($id)
     {
         $book = Book::find($id);
-        return $this->sendResponse(new BookResource($book), 'Book with id '. $id);
+        return $this->sendResponse(new BookResource($book), 'Book with id ' . $id);
     }
 
     /**
@@ -107,40 +107,18 @@ class BookController extends ApiBaseController
      */
     public function update(Request $request, $id)
     {
-        $validate = Validator::make($request->all(), [
-            'title' => 'required',
-            'author' => 'required',
-            'description' => 'required',
-            'released' => 'required',
-            'image' => 'image'
+        $this->validate($request, [
+            'title' => ['required'],
+            'author' => ['required'],
+            'description' => ['required'],
+            'released' => ['required'],
+            'image' => ['required', 'image']
         ]);
-
-        if($validate->fails()){
-            return $this->sendError('Validation errors', $validate->errors());
-        }
 
         if($request->hasFile('image'))
         {
             $image = $request->file('image');
-            $image->storeAs('public/img', $image->hashName());
-            $book = Book::where('id',$id)->update([
-                'title' => $request->title,
-                'author' => $request->author,
-                'description' => $request->description,
-                'released' => $request->released,
-                'image' => $image->hashName()
-            ]);
-
-            return $this->sendResponse(new BookResource($book), 'Book has been updated');
-        } else {
-            $book = Book::where('id',$id)->update([
-                'title' => $request->title,
-                'author' => $request->author,
-                'description' => $request->description,
-                'released' => $request->released,
-            ]);
-
-            return $this->sendResponse(new BookResource($book), 'Book has been updated');
+            Log::info($image);
         }
     }
 
@@ -154,6 +132,6 @@ class BookController extends ApiBaseController
     {
         $book = Book::find($id);
         $book->delete();
-        return $this->sendResponse(new BookResource($book), 'Book has been deleted');   
+        return $this->sendResponse(new BookResource($book), 'Book has been deleted');
     }
 }
