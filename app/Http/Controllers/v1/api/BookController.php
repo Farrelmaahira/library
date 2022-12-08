@@ -53,6 +53,7 @@ class BookController extends ApiBaseController
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
+            Log::info($image);
             $image->getClientOriginalName();
             $image->storeAs('img', $image->hashName());
             $book = Book::create([
@@ -107,19 +108,43 @@ class BookController extends ApiBaseController
      */
     public function update(Request $request, $id)
     {
+        Log::info($id);
+        Log::info($request);
+        Log::info($request->file('image'));
         $this->validate($request, [
             'title' => ['required'],
             'author' => ['required'],
             'description' => ['required'],
-            'released' => ['required'],
-            'image' => ['required', 'image']
+            'released' => ['required']
         ]);
-
-        if($request->hasFile('image'))
+        if ($request->hasFile('image')) 
         {
             $image = $request->file('image');
-            Log::info($image);
+            $image->getClientOriginalName();
+            $image->storeAs('img', $image->hashName());
+            $book = Book::findOrFail($id)->update([
+                'title' => $request->title,
+                'author' => $request->author,
+                'description' => $request->description,
+                'released' => $request->released,
+                'image' => "img/" . $image->hashName()
+            ]);
         }
+        $book = Book::findOrFail($id)->update([
+            'title' => $request->title,
+            'author' => $request->author,
+            'description' => $request->description,
+            'released' => $request->released,
+        ]);
+
+        if($book)
+        {
+            return $this->sendResponse($book, 'data update anjay');
+        } 
+
+        return $this->sendError('data tidak terupdate anjay');
+
+        
     }
 
     /**

@@ -17,16 +17,13 @@ class BaseController extends Controller
         return response()->json($respons, 200);
     }
 
-    public function sendError($error, $errorMessages = [], $code = 404)
+    public function sendError( $errorMessages = '', $code = 404)
     {
     	$response = [
             'success' => false,
-            'message' => $error,
+            'message' => $errorMessages
         ];
 
-        if(!empty($errorMessages)){
-            $response['data'] = $errorMessages;
-        }
 
         return response()->json($response, $code);
     }

@@ -27,3 +27,4 @@ Route::controller(AuthController::class)->group(function (){
 Route::resource('/v1/book', BookController::class); 
 Route::post('/v1/logout', [AuthController::class, 'logout']);
 
+ 
